@@ -27,7 +27,7 @@ spec:
     authorization:
       type: simple
       superUsers:
-        - user1
+        - user1 
   zookeeper:
     replicas: 3
     storage:
