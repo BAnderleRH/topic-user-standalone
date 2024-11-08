@@ -21,6 +21,8 @@ This also has the EntityOperator element removed.
 examples/kafka/kafka-ephemeral-single-sinEntity.yaml -
 This is identical to kafka-ephemeral-single.yaml but has the EntityOperator element removed.
 
+**NOTE: This is deployed in POC currently - in the *kafka-ns* namespace**
+
 examples/kafka/kafka-ephemeral-single.yaml -
 The original example ephemeral Kafka broker and contains
 ```
