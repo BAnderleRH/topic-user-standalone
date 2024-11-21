@@ -126,8 +126,6 @@ spec:
               value: /etc/pki/java/cacerts
             - name: STRIMZI_TRUSTSTORE_PASSWORD
               value: changeit
-            - name: STRIMZI_KAFKA_BOOTSTRAP_SERVERS
-              value: my-kafka-cluster-.kafka-serverless.us-east-1.amazonaws.com:9098
           livenessProbe:
             httpGet:
               path: /healthy
