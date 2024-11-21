@@ -121,7 +121,7 @@ spec:
                 {
                   "sasl.mechanism": "OAUTHBEARER",
                   "sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required oauth.token.endpoint.uri=\"https://login.microsoftonline.com/18a59a81-eea8-4c30-948a-d8824cdc2580/oauth2/v2.0/token\" oauth.client.id=\"9b36d257-1a58-48b2-aa07-af5400f0ba2e\" oauth.client.secret=\"zUE8Q~14~Bo2BA0O5uzlLXRygvD~KgezsQ34vaNE\" oauth.scope=\"api://443ec776-fca2-4bc8-a539-58a43145de4c/.default\" oauth.grant.type=\"client_credentials\" ;", 
-                  "sasl.login.callback.handler.class"="io.strimzi.kafka.oauth.client.JaasClientOauthLoginCallbackHandler"
+                  "sasl.login.callback.handler.class": "io.strimzi.kafka.oauth.client.JaasClientOauthLoginCallbackHandler"
                 }
             - name: STRIMZI_PUBLIC_CA
               value: "true"
