@@ -82,10 +82,6 @@ spec:
           emptyDir:
             medium: Memory
             sizeLimit: 5Mi
-        - name: platform-cluster-ca-cert
-          secret:
-            secretName: platform-cluster-cluster-ca-cert
-            defaultMode: 420
       containers:
         - name: strimzi-topic-operator
           image: registry.redhat.io/amq-streams/strimzi-rhel9-operator:2.7.0
@@ -94,55 +90,23 @@ spec:
           volumeMounts:
             - name: strimzi-tmp
               mountPath: /tmp
-            - name: platform-cluster-ca-cert
-              readOnly: true
-              mountPath: /etc/tls-sidecar/cluster-ca-certs
           env:
             - name: STRIMZI_RESOURCE_LABELS
-              value: strimzi.io/cluster=platform-cluster
+              value: "strimzi.io/cluster=kafka-noauth"
             - name: STRIMZI_KAFKA_BOOTSTRAP_SERVERS
-              value: 'platform-cluster-kafka-bootstrap.stream-services.svc:9093'
+              value: kafka-noauth-kafka-bootstrap.kafka-na.svc:9092
             - name: STRIMZI_FULL_RECONCILIATION_INTERVAL_MS
-              value: '120000'
+              value: "120000"
             - name: STRIMZI_LOG_LEVEL
-              value: DEBUG
+              value: INFO
             - name: STRIMZI_TLS_ENABLED
-              value: 'true'
-            - name: STRIMZI_TLS_AUTH_ENABLED
-              value: 'false'
+              value: "false"
             - name: STRIMZI_NAMESPACE
               valueFrom:
                 fieldRef:
-                  apiVersion: v1
                   fieldPath: metadata.namespace
-            - name: STRIMZI_SASL_ENABLED
-              value: 'true' 
-            - name: STRIMZI_SASL_MECHANISM
-              value: OAUTHBEARER
-            - name: STRIMZI_SECURITY_PROTOCOL
-              value: SASL_SSL
-            - name: STRIMZI_SKIP_CLUSTER_CONFIG_REVIEW
-              value: 'true'
-            - name: STRIMZI_ALTERABLE_TOPIC_CONFIG
-              value: 'compression.type, max.message.bytes, message.timestamp.difference.max.ms, message.timestamp.type, retention.bytes, retention.ms' 
-            - name: STRIMZI_SASL_CUSTOM_CONFIG_JSON
-              value: |
-                {
-                  "sasl.mechanism": "OAUTHBEARER", 
-                  "sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required oauth.token.endpoint.uri=\"https://login.microsoftonline.com/18a59a81-eea8-4c30-948a-d8824cdc2580/oauth2/v2.0/token\" oauth.client.id=\"9b36d257-1a58-48b2-aa07-af5400f0ba2e\" oauth.client.secret=\"zUE8Q~14~Bo2BA0O5uzlLXRygvD~KgezsQ34vaNE\" oauth.scope=\"api://443ec776-fca2-4bc8-a539-58a43145de4c/.default\" ;",  
-                  "sasl.login.callback.handler.class": "io.strimzi.kafka.oauth.client.JaasClientOauthLoginCallbackHandler" 
-                }
-            - name: STRIMZI_PUBLIC_CA
-              value: 'false'
-            - name: STRIMZI_TRUSTSTORE_LOCATION
-              value: /etc/tls-sidecar/cluster-ca-certs/ca.p12
-            - name: STRIMZI_TRUSTSTORE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: platform-cluster-cluster-ca-cert
-                  key: ca.password
-          imagePullPolicy: IfNotPresent
-          terminationMessagePolicy: File
+            #- name: STRIMZI_TLS_AUTH_ENABLED
+            #  value: "false"      
           livenessProbe:
             httpGet:
               path: /healthy
@@ -162,6 +126,5 @@ spec:
             requests:
               memory: 256Mi
               cpu: 100m
-      dnsPolicy: ClusterFirst 
-  strategy: 
-    type: Recreate 
+  strategy:
+    type: Recreate
