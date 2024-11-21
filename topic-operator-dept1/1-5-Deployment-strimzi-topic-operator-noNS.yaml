@@ -92,21 +92,42 @@ spec:
               mountPath: /tmp
           env:
             - name: STRIMZI_RESOURCE_LABELS
-              value: "strimzi.io/cluster=global-kafka"
+              value: "strimzi.io/cluster=platform-cluster"
             - name: STRIMZI_KAFKA_BOOTSTRAP_SERVERS
-              value: global-kafka-kafka-bootstrap.kafka-ns.svc:9092
+              value: platform-cluster-kafka-bootstrap.stream-services.svc:9093
             - name: STRIMZI_FULL_RECONCILIATION_INTERVAL_MS
               value: "120000"
             - name: STRIMZI_LOG_LEVEL
               value: INFO
             - name: STRIMZI_TLS_ENABLED
-              value: "false"
+              value: "true"
             - name: STRIMZI_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-            #- name: STRIMZI_TLS_AUTH_ENABLED
-            #  value: "false"      
+            - name: STRIMZI_SASL_ENABLED
+              value: "true"
+            - name: STRIMZI_SECURITY_PROTOCOL
+              value: SASL_SSL
+            - name: STRIMZI_SKIP_CLUSTER_CONFIG_REVIEW
+              value: "true"
+            - name: STRIMZI_ALTERABLE_TOPIC_CONFIG
+              value: compression.type, max.message.bytes, message.timestamp.difference.max.ms, message.timestamp.type, retention.bytes, retention.ms
+            - name: STRIMZI_SASL_CUSTOM_CONFIG_JSON
+              value: |
+                {
+                  "sasl.mechanism": "AWS_MSK_IAM",
+                  "sasl.jaas.config": "software.amazon.msk.auth.iam.IAMLoginModule required;",
+                  "sasl.client.callback.handler.class": "software.amazon.msk.auth.iam.IAMClientCallbackHandler"
+                }
+            - name: STRIMZI_PUBLIC_CA
+              value: "true"
+            - name: STRIMZI_TRUSTSTORE_LOCATION
+              value: /etc/pki/java/cacerts
+            - name: STRIMZI_TRUSTSTORE_PASSWORD
+              value: changeit
+            - name: STRIMZI_KAFKA_BOOTSTRAP_SERVERS
+              value: my-kafka-cluster-.kafka-serverless.us-east-1.amazonaws.com:9098
           livenessProbe:
             httpGet:
               path: /healthy
