@@ -82,6 +82,10 @@ spec:
           emptyDir:
             medium: Memory
             sizeLimit: 5Mi
+        - name: platform-cluster-ca-cert
+          secret: 
+            secretName: platform-cluster-cluster-ca-cert
+            defaultMode: 420
       containers:
         - name: strimzi-topic-operator
           image: registry.redhat.io/amq-streams/strimzi-rhel9-operator:2.7.0
@@ -90,6 +94,9 @@ spec:
           volumeMounts:
             - name: strimzi-tmp
               mountPath: /tmp
+            - name: platform-cluster-ca-cert
+              mountPath: /platform-cluster-certs
+              readOnly: true
           env:
             - name: STRIMZI_RESOURCE_LABELS
               value: "strimzi.io/cluster=platform-cluster"
@@ -109,20 +116,11 @@ spec:
               value: "true"
             - name: STRIMZI_SECURITY_PROTOCOL
               value: SASL_SSL
-            - name: STRIMZI_SKIP_CLUSTER_CONFIG_REVIEW
-              value: "true"
-            - name: STRIMZI_ALTERABLE_TOPIC_CONFIG
-              value: compression.type, max.message.bytes, message.timestamp.difference.max.ms, message.timestamp.type, retention.bytes, retention.ms
             - name: STRIMZI_SASL_CUSTOM_CONFIG_JSON
               value: |
                 {
                   "sasl.mechanism": "OAUTHBEARER",
-                  "sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required;",
-                    oauth.token.endpoint.uri="https://login.microsoftonline.com/18a59a81-eea8-4c30-948a-d8824cdc2580/oauth2/v2.0/token" \ 
-                    oauth.client.id="9b36d257-1a58-48b2-aa07-af5400f0ba2e" \ 
-                    oauth.client.secret="zUE8Q~14~Bo2BA0O5uzlLXRygvD~KgezsQ34vaNE" \ 
-                    oauth.scope="api://443ec776-fca2-4bc8-a539-58a43145de4c/.default" \ 
-                    oauth.grant.type="client_credentials" ;, 
+                  "sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required oauth.token.endpoint.uri=\"https://login.microsoftonline.com/18a59a81-eea8-4c30-948a-d8824cdc2580/oauth2/v2.0/token\" oauth.client.id=\"9b36d257-1a58-48b2-aa07-af5400f0ba2e\" oauth.client.secret=\"zUE8Q~14~Bo2BA0O5uzlLXRygvD~KgezsQ34vaNE\" oauth.scope=\"api://443ec776-fca2-4bc8-a539-58a43145de4c/.default\" oauth.grant.type=\"client_credentials\" ;", 
                   "sasl.login.callback.handler.class"="io.strimzi.kafka.oauth.client.JaasClientOauthLoginCallbackHandler"
                 }
             - name: STRIMZI_PUBLIC_CA
@@ -130,7 +128,10 @@ spec:
             - name: STRIMZI_TRUSTSTORE_LOCATION
               value: /platform-cluster-certs/ca.p12
             - name: STRIMZI_TRUSTSTORE_PASSWORD
-              value: ouvBbu99PSCp
+              valueFrom: 
+                secretKeyRef: 
+                  name: platform-cluster-cluster-ca-cert
+                  key: ca.password
           livenessProbe:
             httpGet:
               path: /healthy
