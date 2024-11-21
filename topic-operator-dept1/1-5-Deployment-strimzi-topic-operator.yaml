@@ -1,7 +1,66 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: strimzi-topic-operator
+  namespace: kafka-tenant-app-poc
+  labels:
+    app: strimzi
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: strimzi-topic-operator
+  namespace: kafka-tenant-app-poc
+  labels:
+    app: strimzi
+rules:
+- apiGroups:
+  - "kafka.strimzi.io"
+  resources:
+  - kafkatopics
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - patch
+  - update
+  - delete
+- apiGroups:
+  - "kafka.strimzi.io"
+  resources:
+  - kafkatopics/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+--- 
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: strimzi-topic-operator
+  namespace: kafka-tenant-app-poc
+  labels:
+    app: strimzi
+subjects:
+  - kind: ServiceAccount
+    name: strimzi-topic-operator
+roleRef:
+  kind: Role
+  name: strimzi-topic-operator
+  apiGroup: rbac.authorization.k8s.io
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: strimzi-topic-operator
+  namespace: kafka-tenant-app-poc
   labels:
     app: strimzi
 spec:
@@ -37,17 +96,19 @@ spec:
               mountPath: /tmp
           env:
             - name: STRIMZI_RESOURCE_LABELS
-              value: "strimzi.io/cluster=platform-cluster"
+              value: "strimzi.io/cluster=global-kafka"
             - name: STRIMZI_KAFKA_BOOTSTRAP_SERVERS
-              value: platform-cluster-kafka-bootstrap.stream-services.svc:9093
+              value: global-kafka-kafka-bootstrap.kafka-ns.svc:9092
             - name: STRIMZI_FULL_RECONCILIATION_INTERVAL_MS
               value: "120000"
             - name: STRIMZI_LOG_LEVEL
-              value: DEBUG
+              value: INFO
             - name: STRIMZI_TLS_ENABLED
-              value: "true"
+              value: "false"
             - name: STRIMZI_NAMESPACE
-              value: kafka-tenant-app-poc
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             #- name: STRIMZI_TLS_AUTH_ENABLED
             #  value: "false"      
           livenessProbe:

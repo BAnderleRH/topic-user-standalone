@@ -53,13 +53,13 @@ spec:
             - name: STRIMZI_FULL_RECONCILIATION_INTERVAL_MS
               value: "120000"
             - name: STRIMZI_LOG_LEVEL
-              value: INFO
+              value: DEBUG
             - name: STRIMZI_GC_LOG_ENABLED
               value: "true"
             - name: STRIMZI_CA_VALIDITY
               value: "365"
             - name: STRIMZI_CA_RENEWAL
-              value: "30"
+              value: "30"          
           livenessProbe:
             httpGet:
               path: /healthy

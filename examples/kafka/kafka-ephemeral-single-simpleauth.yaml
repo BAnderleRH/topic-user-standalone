@@ -26,8 +26,6 @@ spec:
       type: ephemeral
     authorization:
       type: simple
-      superUsers:
-        - user1 
   zookeeper:
     replicas: 3
     storage:
