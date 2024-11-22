@@ -92,9 +92,9 @@ spec:
               mountPath: /tmp
           env:
             - name: STRIMZI_RESOURCE_LABELS
-              value: "strimzi.io/cluster=kafka-noauth"
+              value: "strimzi.io/cluster=kafka-na"
             - name: STRIMZI_KAFKA_BOOTSTRAP_SERVERS
-              value: kafka-noauth-kafka-bootstrap.kafka-na.svc:9092
+              value: kafka-na-kafka-bootstrap.kafka-na.svc:9092
             - name: STRIMZI_FULL_RECONCILIATION_INTERVAL_MS
               value: "120000"
             - name: STRIMZI_LOG_LEVEL

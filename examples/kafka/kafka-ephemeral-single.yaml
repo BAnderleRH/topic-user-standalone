@@ -1,7 +1,7 @@
 apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
-  name: global-kafka
+  name: kafka-na
 spec:
   kafka:
     version: 3.7.0
