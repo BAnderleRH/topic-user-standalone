@@ -1,0 +1,163 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: strimzi-topic-operator
+  labels:
+    app: strimzi
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: strimzi-topic-operator
+  labels:
+    app: strimzi
+rules:
+- apiGroups:
+  - "kafka.strimzi.io"
+  resources:
+  - kafkatopics
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - patch
+  - update
+  - delete
+- apiGroups:
+  - "kafka.strimzi.io"
+  resources:
+  - kafkatopics/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+--- 
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: strimzi-topic-operator
+  labels:
+    app: strimzi
+subjects:
+  - kind: ServiceAccount
+    name: strimzi-topic-operator
+roleRef:
+  kind: Role
+  name: strimzi-topic-operator
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: strimzi-topic-operator
+  labels:
+    app: strimzi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: strimzi-topic-operator
+  template:
+    metadata:
+      labels:
+        name: strimzi-topic-operator
+        com.company: Red_Hat
+        rht.prod_name: Red_Hat_Application_Foundations
+        rht.prod_ver: 2024.Q2
+        rht.comp: AMQ_Streams
+        rht.comp_ver: "2.7"
+        rht.subcomp: topic-operator
+        rht.subcomp_t: infrastructure
+    spec:
+      serviceAccountName: strimzi-topic-operator
+      volumes:
+        - name: strimzi-tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 5Mi
+        - name: platform-cluster-ca-cert
+          secret:
+            secretName: platform-cluster-cluster-ca-cert
+            defaultMode: 420
+      containers:
+        - name: strimzi-topic-operator
+          image: registry.redhat.io/amq-streams/strimzi-rhel9-operator:2.7.0
+          args:
+            - /opt/strimzi/bin/topic_operator_run.sh
+          volumeMounts:
+            - name: strimzi-tmp
+              mountPath: /tmp
+            - name: platform-cluster-ca-cert
+              readOnly: true
+              mountPath: /etc/tls-sidecar/cluster-ca-certs
+          env:
+            - name: STRIMZI_RESOURCE_LABELS
+              value: strimzi.io/cluster=platform-cluster
+            - name: STRIMZI_KAFKA_BOOTSTRAP_SERVERS
+              value: 'platform-cluster-kafka-bootstrap.stream-services.svc:9093'
+            - name: STRIMZI_FULL_RECONCILIATION_INTERVAL_MS
+              value: '120000'
+            - name: STRIMZI_LOG_LEVEL
+              value: DEBUG
+            - name: STRIMZI_TLS_ENABLED
+              value: 'true'
+            - name: STRIMZI_TLS_AUTH_ENABLED
+              value: 'false'
+            - name: STRIMZI_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: STRIMZI_SASL_ENABLED
+              value: 'true' 
+            - name: STRIMZI_SASL_MECHANISM
+              value: OAUTHBEARER
+            - name: STRIMZI_SECURITY_PROTOCOL
+              value: SSL
+            - name: STRIMZI_SKIP_CLUSTER_CONFIG_REVIEW
+              value: 'true'
+            - name: STRIMZI_PUBLIC_CA
+              value: 'false'
+            - name: STRIMZI_TRUSTSTORE_LOCATION
+              valueFrom:
+                configMapKeyRef:
+                  key: "trust-bundle.pem"
+            - name: STRIMZI_TRUSTSTORE_PASSWORD
+              value: 'changeit'
+            - name: STRIMZI_KEYSTORE_LOCATION # (3)
+              valueFrom:
+                configMapKeyRef:
+                  key: "trust-bundle.pem"
+            - name: STRIMZI_KEYSTORE_PASSWORD # (4)
+              value: "changeit"      
+          imagePullPolicy: IfNotPresent
+          terminationMessagePolicy: File
+          livenessProbe:
+            httpGet:
+              path: /healthy
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            limits:
+              memory: 256Mi
+              cpu: 500m
+            requests:
+              memory: 256Mi
+              cpu: 100m
+      dnsPolicy: ClusterFirst 
+  strategy: 
+    type: Recreate 
