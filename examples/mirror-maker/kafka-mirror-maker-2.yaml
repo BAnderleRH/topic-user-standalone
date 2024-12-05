@@ -20,11 +20,16 @@ spec:
   - sourceCluster: "cluster-a"
     targetCluster: "cluster-b"
     sourceConnector:
-      tasksMax: 1
+      tasksMax: 2
       config:
         # -1 means it will use the default replication factor configured in the broker
         replication.factor: -1
         offset-syncs.topic.replication.factor: -1
+        topic.creation.default.replication.factor:  1
+        topic.creation.default.partitions: 3
+        replication.policy.class: "io.strimzi.kafka.connect.mirror.IdentityReplicationPolicy"
+        topic.creation.enable: "true" 
+        offset-syncs.topic.location: target
         sync.topic.acls.enabled: "false"
         refresh.topics.interval.seconds: 600
     checkpointConnector:
