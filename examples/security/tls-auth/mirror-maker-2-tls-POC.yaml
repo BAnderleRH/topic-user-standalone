@@ -264,6 +264,7 @@ spec:
           topic.creation.enable: "true" 
           # Create the mm2-offset-syncs topic in the target cluster instead of source.
           offset-syncs.topic.location: target
+          topic.creation.default.partitions: 1
       checkpointConnector:
         tasksMax: 1
         config:
