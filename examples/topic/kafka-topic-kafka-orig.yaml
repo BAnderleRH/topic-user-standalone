@@ -3,7 +3,7 @@ kind: KafkaTopic
 metadata:
   name: dept01-topic01
   labels:
-    strimzi.io/cluster: kafka-orig
+    strimzi.io/cluster: kafka-or
 spec:
   partitions: 1
   replicas: 1
@@ -16,7 +16,7 @@ kind: KafkaTopic
 metadata:
   name: dept01-topic02
   labels:
-    strimzi.io/cluster: kafka-orig
+    strimzi.io/cluster: kafka-or
 spec:
   partitions: 1
   replicas: 1
@@ -29,7 +29,7 @@ kind: KafkaTopic
 metadata:
   name: dept02-topic01
   labels:
-    strimzi.io/cluster: kafka-orig
+    strimzi.io/cluster: kafka-or
 spec:
   partitions: 1
   replicas: 1
@@ -42,7 +42,7 @@ kind: KafkaTopic
 metadata:
   name: dept03-topic01
   labels:
-    strimzi.io/cluster: kafka-orig
+    strimzi.io/cluster: kafka-or
 spec:
   partitions: 1
   replicas: 1
