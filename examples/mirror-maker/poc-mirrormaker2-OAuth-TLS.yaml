@@ -1,0 +1,84 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaMirrorMaker2
+metadata:
+  annotations:
+  name: my-mirror-maker-2
+  namespace: kafka-or
+spec:
+  clusters:
+    # Added this cluster that has authentication type=oauth 
+    - alias: platform-cluster
+      authentication:
+        # EntraID clientID =^= principal subject or "sub" claim in JWT
+        clientId: 83ab83c5-b6b5-4cc0-95bd-637f9d857379
+        clientSecret:
+          key: secret
+          secretName: mirror-maker2-client-secret
+        scope: 'api://443ec776-fca2-4bc8-a539-58a43145de4c/.default'
+        tokenEndpointUri: 'https://login.microsoftonline.com/18a59a81-eea8-4c30-948a-d8824cdc2580/oauth2/v2.0/token'
+        type: oauth
+      bootstrapServers: 'platform-cluster-kafka-bootstrap.streams-services.svc:9093'
+      tls:
+        trustedCertificates:
+          # Using configured trust-manager for certificate bundles
+          - certificate: ca.crt
+            secretName: lk-ca-root-bundle
+    - alias: cluster-a
+      authentication:
+        certificateAndKey:
+          certificate: user.crt
+          key: user.key
+          secretName: cluster-a-user
+        type: tls
+      bootstrapServers: 'cluster-a-kafka-bootstrap.kafka-or.svc:9093'
+      tls:
+        trustedCertificates:
+          - certificate: ca.crt
+            secretName: cluster-a-cluster-ca-cert
+    - alias: cluster-b
+      authentication:
+        certificateAndKey:
+          certificate: user.crt
+          key: user.key
+          secretName: cluster-b-user
+        type: tls
+      bootstrapServers: 'cluster-b-kafka-bootstrap.kafka-dup.svc:9093'
+      config:
+        config.storage.replication.factor: -1
+        offset.storage.replication.factor: -1
+        status.storage.replication.factor: -1
+      tls:
+        trustedCertificates:
+          - certificate: ca.crt
+            secretName: cluster-b-cluster-ca-cert
+  connectCluster: cluster-b
+  mirrors:
+    - checkpointConnector:
+        config:
+          checkpoints.topic.replication.factor: -1
+          emit.checkpoints.interval.seconds: 60
+          refresh.groups.interval.seconds: 600
+          sync.group.offsets.enabled: 'true'
+          sync.group.offsets.interval.seconds: 60
+          topic.creation.default.partitions: 1
+          topic.creation.default.replication.factor: 1
+        tasksMax: 1
+      groupsPattern: .*
+      # platform-cluster is currently the POC demo cluster in ns:streams-services 
+      sourceCluster: platform-cluster
+      sourceConnector:
+        config:
+          offset-syncs.topic.replication.factor: -1
+          offset-syncs.topic.location: target
+          topic.creation.default.partitions: 1
+          offset.lag.max: 100
+          refresh.topics.interval.seconds: 600
+          sync.topic.acls.enabled: 'false'
+          topic.creation.default.replication.factor: 1
+          replication.factor: -1
+          topic.creation.enable: 'true'
+        tasksMax: 1
+      targetCluster: cluster-b
+      topicsPattern: .*
+  replicas: 1
+  version: 3.7.0
