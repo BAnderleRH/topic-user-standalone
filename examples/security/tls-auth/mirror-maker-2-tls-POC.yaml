@@ -2,7 +2,7 @@ apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
   name: cluster-a
-  namespace: kafka-or
+  namespace: kafka-orig
 spec:
   kafka:
     version: 3.7.0
@@ -88,7 +88,7 @@ apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaUser
 metadata:
   name: cluster-a-user
-  namespace: kafka-or
+  namespace: kafka-orig
   labels:
     strimzi.io/cluster: cluster-a
 spec:
@@ -220,7 +220,7 @@ spec:
   connectCluster: "cluster-b" # Must be the target custer
   clusters:
     - alias: "cluster-a"  # Source cluster
-      bootstrapServers: cluster-a-kafka-bootstrap.kafka-or.svc:9093
+      bootstrapServers: cluster-a-kafka-bootstrap.kafka-orig.svc:9093
       tls:
         trustedCertificates:
           - secretName: cluster-a-cluster-ca-cert
@@ -265,16 +265,24 @@ spec:
           topic.creation.enable: "true" 
           # Create the mm2-offset-syncs topic in the target cluster instead of source.
           offset-syncs.topic.location: target
-      checkpointConnector:
-        tasksMax: 1
-        config:
-          # -1 means it will use the default replication factor configured in the broker
-          checkpoints.topic.replication.factor: -1
-          sync.group.offsets.enabled: "true"
-          emit.checkpoints.interval.seconds: 60
-          sync.group.offsets.interval.seconds: 60
-          refresh.groups.interval.seconds: 600
-          topic.creation.default.replication.factor: 1
-          topic.creation.default.partitions: 1
+          replication.policy.class: "io.strimzi.kafka.connect.mirror.IdentityReplicationPolicy"  #10e
+        heartbeatConnector:                               #11
+          autoRestart: 
+            enabled: true
+          config:                                                    
+            heartbeats.topic.replication.factor: 3 
+        checkpointConnector: 
+          tasksMax: 1
+          config:
+            # -1 means it will use the default replication factor configured in the broker
+            checkpoints.topic.replication.factor: -1
+            sync.group.offsets.enabled: "true"
+            emit.checkpoints.interval.seconds: 60
+            sync.group.offsets.interval.seconds: 60
+            refresh.groups.interval.seconds: 600
+            topic.creation.default.replication.factor: 1
+            topic.creation.default.partitions: 1
+            replication.policy.class: "io.strimzi.kafka.connect.mirror.IdentityReplicationPolicy"  #14d                                           
+            offset-syncs.topic.location: target           #14e
       topicsPattern: ".*"
       groupsPattern: ".*"
